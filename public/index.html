@@ -9,292 +9,177 @@
     <script src="//cdn.rawgit.com/donmccurdy/aframe-extras/v3.12.4/dist/aframe-extras.min.js"></script>
     <!-- A-Frame Animation -->
    <script src="https://unpkg.com/aframe-animation-component@4.1.1/dist/aframe-animation-component.min.js"></script>
+   <script src="aframe-jitter-component.js"></script>
+   <script src="aframe-shockwave-component.js"></script>
   </head>
   <body>
-<!-- Custom Jitter Component (WIP) -->
-<script>
-  
-  AFRAME.registerComponent('jitter', {
-    
-    dependencies: ['position'],
-    
-    schema: {
-      intensity: { type: 'number',  default: 0.05 },
-      speed:     { type: 'int',     default: 10 },
-      on:        { type: 'string' },
-      off:       { type: 'string' },
-      autoplay:  { type: 'boolean', default: true }
-      // duration
-    },
-    
-    update: function () {
-      this.pos = this.el.object3D.position.clone();
-      
-      if ( this.data.autoplay ) {
-        // this.el.addState('jitter');
-        this.el.jitter = true;
-      }
-      
-      switch ( this.data.on ) {
-          
-        case '' :
-          break;
-          
-        case 'hover' :
-          this.el.jitter = !!this.el.is('cursor-hovered');
-          break;
-          
-        default :
-          this.el.addEventListener(this.data.on, jitterOn);
-      }
-      
-      function jitterOn(e) {
-        this.jitter = true;
-      }
-      
-      function jitterOff(e) {
-        this.jitter = false;
-      }
-      
-      if ( this.data.off ) {
-        this.el.addEventListener(this.data.off, jitterOff);
-      }
-      
-      // Speed throttles tick
-      this.tick = AFRAME.utils.throttleTick(this.tick, this.data.speed, this);
-      
-    },
-    
-    tick: function (t, dt) {
 
-      if ( ! this.el.jitter ) return;
-      
-      this.jitter();
-      this.resetPosition();
-      
-    },
-
-    jitter: function () {
-      var intensity = this.data.intensity;
-      
-      this.el.object3D.position.set(
-        this.pos.x + THREE.Math.randFloat(-intensity, intensity),
-        this.pos.y + THREE.Math.randFloat(-intensity, intensity),
-        this.pos.z + THREE.Math.randFloat(-intensity, intensity)
-      );
-    },
-    
-    resetPosition: function () {
-       this.el.object3D.position = {
-        x: this.pos.x,
-        y: this.pos.y,
-        z: this.pos.z
-      };
-    }
-    
-  });
-</script>
-
-<!-- Custom Shockwave Component -->
-<script>
-  AFRAME.registerComponent('shockwave', {
-    
-    dependencies: [ 'jitter', 'sound__cluster', 'sound__shockwave' ],
-    
-    init: function () {
-      
-      this.bomb = this.el.querySelector('[sound__bomb]');
-      
-      setTimeout(this.blowStuffUp.bind(this), 8000); // 10000 | 5000 | 8000
-      
-    },
-    
-    blowStuffUp: function () {
-
-      // this.el.emit('cluster');
-      // this.el.emit('bomb');
-      this.bomb.emit('bomb');
-
-      setTimeout(function () {
-        this.el.emit('shockwave');
-      }.bind(this), 18000); // 8000 | 20000 | 18000
-
-      setTimeout(function () {
-        this.el.emit('shockwave-off');
-      }.bind(this), 33000); // 23000 | 35000 | 33000
-
-      setTimeout(this.blowStuffUp.bind(this), 60000); // 40000 | 60000
-    }
-    
-  });
-</script>
-    
  <div style="position:relative;">
 
-<!-- Scene -->
-<a-scene stats="false" background="color: black;" fog="color: #633; near: 0; far: 20;">
-  
-  <!-- Assets -->
-  <a-assets timeout="30000">
-    <!-- Textures (Not to be freely distributed.) -->
-    <img id="crate-texture" src="https://aframe.io/sample-assets/assets/images/wood/crate.gif" crossorigin="anonymous">
-    <img id="radiation" src="https://ucarecdn.com/fe6c65ad-3ff9-41ae-8b17-cd4f2977fa78/" alt="Radiation" crossorigin="anonymous">
-    <img id="fallout-shelter" src="https://ucarecdn.com/2d51227c-036c-45c9-ba17-f158115b85b2/" alt="Fallout Shelter" crossorigin="anonymous">
-    <img id="garage-door" src="https://ucarecdn.com/2db34e57-492d-4da4-a09f-7bbc02970d11/" alt="Garage Door" crossorigin="anonymous">
-    <img id="garagedoor-normal" src="https://ucarecdn.com/962cc008-e6ad-4a69-9736-4a2d804f701e/" alt="Garage Door Normal Map" crossorigin="anonymous">
-    
-    <!-- Audio Not To Be Freely Distributed-->
-    <a-asset-item id="bomb" src="https://ucarecdn.com/a084c3ef-299d-4d03-93f0-0df0d52d9ec2/" crossorigin="anonymous" preload="auto" response-type="arraybuffer"></a-asset-item>
-    
-    <audio id="ambience" src="https://ucarecdn.com/e01a0015-866a-4b21-9cdf-85383e4f06f6/" crossorigin="anonymous" preload></audio>
-    <audio id="alarm" src="https://ucarecdn.com/ae148d93-8c89-4c02-bf7f-e4f3d80554e8/" crossorigin="anonymous" preload></audio>
-    <audio id="shockwave" src="https://ucarecdn.com/db8942b6-ed33-440d-8e34-62aa38ac79bb/" crossorigin="anonymous" preload></audio>
-    <audio id="cluster" src="https://ucarecdn.com/e73047a0-fb26-49b2-85df-f36cb380a8ee/" crossorigin="anonymous" preload></audio>
-<!--     <audio id="bomb" src="https://ucarecdn.com/a5cc0432-7e2d-42a4-b027-7f594db2fe02/" crossorigin="anonymous" preload="auto" response-type="arraybuffer"></audio> -->
-    
-    <!-- Mixins -->
-    <a-mixin id="wall" geometry="primitive: box; depth: 1; height: 10; width: 20;" material="color: gray; roughness: 1; metalness: 0;" shadow="receive: true; cast: false;" static-body></a-mixin>
-    <a-mixin id="floor" geometry="primitive: box; height: 1; depth: 20; width: 20;" material="color: #333;" shadow="receive: true;" static-body></a-mixin>
-    <a-mixin id="duct" geometry="primitive: box; height: 1; width: 20; depth: 1;" material="color: silver; metalness: 0.7; roughness: 0.3;"></a-mixin>
-    <a-mixin id="duct-seam" geometry="primitive: box; height: 1.1; width: 0.1; depth: 1.1;" material="color: silver; metalness: 0.7; roughness: 0;"></a-mixin>
-    <a-mixin id="pole" geometry="primitive: cylinder; height: 10; radius: 0.2;" material="color: white; metalness: 1;" shadow static-body position="0 5 0"></a-mixin>
-    <a-mixin id="crate" geometry="primitive: box;" material="src: #crate-texture; roughness: 1; metalness: 0;" shadow="cast: true; receive: true;"></a-mixin>
-    <a-mixin id="spotlight" light="type: spot; color: red; intensity: 20; distance: 7.5; castShadow: true; penumbra: 0.5;"></a-mixin>
-    <a-mixin id="sign" material="shader: standard;"></a-mixin>
-  </a-assets>
-  
-  <!-- Camera 0.8.0 -->
-<!--   <a-camera look-controls="pointerLockEnabled: true;" position=" 0 1.6 3" sound="src: #ambience; autoplay: true; loop: true; positional: false; volume: 0.2;"></a-camera> -->
-  
-  <!-- Camera 0.7.1 -->
-  <a-entity id="player" camera="userHeight: 1.6;" jump-ability kinematic-body universal-controls position="0 0 0" sound__ambience="src: #ambience; autoplay: true; loop: true; positional: false; volume: 0.2;">
-  </a-entity>
-  
-  <a-entity id="room" shockwave jitter="on: shockwave; off: shockwave-off; autoplay: false; intensity: 0.1;" sound__shockwave="src: #shockwave; autoplay: false; loop: false; positional: false; on: shockwave;" sound__cluster="src: #cluster; on: cluster; autoplay: false; loop: false; positional: false; volume: 0.5;" sound__bombXXX="src: #bomb; autoplay: false; loop: false; positional: false; on: bomb; volume: 0.4;">
-    
-    <!-- Siren and detonation -->
-    <a-entity id="bombtrack" sound__bomb="src: #bomb; autoplay: false; loop: false; positional: true; on: bomb; volume: 5; rolloffFactor: 0.2" position="0 4 10"></a-entity>
-  
-    <!-- Dynamic Crates -->
-    <a-entity mixin="crate" dynamic-body position="0 2.5 -9.5"></a-entity>
+  <!-- Scene -->
+  <a-scene stats="false" background="color: black;" fog="color: #633; near: 0; far: 20;">
 
-    <a-entity class="crate" mixin="crate" dynamic-body position="-0.75 1.5 -9.5"></a-entity>
-    <a-entity class="crate" mixin="crate" dynamic-body position="0.75 1.5 -9.5" rotation="0 0 90"></a-entity>
+    <!-- Assets -->
+    <a-assets timeout="30000">
+      <!-- Textures (Not to be freely distributed.) -->
+      <img id="crate-texture" src="https://aframe.io/sample-assets/assets/images/wood/crate.gif" crossorigin="anonymous">
+      <img id="radiation" src="https://ucarecdn.com/fe6c65ad-3ff9-41ae-8b17-cd4f2977fa78/" alt="Radiation" crossorigin="anonymous">
+      <img id="fallout-shelter" src="https://ucarecdn.com/2d51227c-036c-45c9-ba17-f158115b85b2/" alt="Fallout Shelter" crossorigin="anonymous">
+      <img id="garage-door" src="https://ucarecdn.com/2db34e57-492d-4da4-a09f-7bbc02970d11/" alt="Garage Door" crossorigin="anonymous">
+      <img id="garagedoor-normal" src="https://ucarecdn.com/962cc008-e6ad-4a69-9736-4a2d804f701e/" alt="Garage Door Normal Map" crossorigin="anonymous">
 
-    <a-entity class="crate" mixin="crate" dynamic-body position="-1.5 0.5 -9.5"></a-entity>
-    <a-entity class="crate" mixin="crate" dynamic-body position="0 0.5 -9.5" rotation="0 0 90"></a-entity>
-    <a-entity class="crate" mixin="crate" dynamic-body position="1.5 0.5 -9.5"></a-entity>
+      <!-- Audio Not To Be Freely Distributed-->
+      <a-asset-item id="bomb" src="https://ucarecdn.com/a084c3ef-299d-4d03-93f0-0df0d52d9ec2/" crossorigin="anonymous" preload="auto" response-type="arraybuffer"></a-asset-item>
 
-    <!-- Dynamic Crates -->
-    <a-entity class="crate" mixin="crate" dynamic-body rotation="0 45 90" position="4 0.5 -6"></a-entity>
-    <a-entity class="crate" mixin="crate" dynamic-body position="4 1.5 -6.1"></a-entity>
+      <audio id="ambience" src="https://ucarecdn.com/e01a0015-866a-4b21-9cdf-85383e4f06f6/" crossorigin="anonymous" preload></audio>
+      <audio id="alarm" src="https://ucarecdn.com/ae148d93-8c89-4c02-bf7f-e4f3d80554e8/" crossorigin="anonymous" preload></audio>
+      <audio id="shockwave" src="https://ucarecdn.com/db8942b6-ed33-440d-8e34-62aa38ac79bb/" crossorigin="anonymous" preload></audio>
+      <audio id="cluster" src="https://ucarecdn.com/e73047a0-fb26-49b2-85df-f36cb380a8ee/" crossorigin="anonymous" preload></audio>
+  <!--     <audio id="bomb" src="https://ucarecdn.com/a5cc0432-7e2d-42a4-b027-7f594db2fe02/" crossorigin="anonymous" preload="auto" response-type="arraybuffer"></audio> -->
 
-    <a-entity class="crate" mixin="crate" dynamic-body rotation="0 45 90" position="-4 0.5 -6"></a-entity>
-    <a-entity class="crate" mixin="crate" dynamic-body position="-4 0.5 -4.8"></a-entity>
-    
-     <a-entity class="crate" mixin="crate" dynamic-body rotation="0 45 90" position="-4 0.5 6"></a-entity>
-    <a-entity class="crate" mixin="crate" dynamic-body position="-4 1.5 6.1"></a-entity>
+      <!-- Mixins -->
+      <a-mixin id="wall" geometry="primitive: box; depth: 1; height: 10; width: 20;" material="color: gray; roughness: 1; metalness: 0;" shadow="receive: true; cast: false;" static-body></a-mixin>
+      <a-mixin id="floor" geometry="primitive: box; height: 1; depth: 20; width: 20;" material="color: #333;" shadow="receive: true;" static-body></a-mixin>
+      <a-mixin id="duct" geometry="primitive: box; height: 1; width: 20; depth: 1;" material="color: silver; metalness: 0.7; roughness: 0.3;"></a-mixin>
+      <a-mixin id="duct-seam" geometry="primitive: box; height: 1.1; width: 0.1; depth: 1.1;" material="color: silver; metalness: 0.7; roughness: 0;"></a-mixin>
+      <a-mixin id="pole" geometry="primitive: cylinder; height: 10; radius: 0.2;" material="color: white; metalness: 1;" shadow static-body position="0 5 0"></a-mixin>
+      <a-mixin id="crate" geometry="primitive: box;" material="src: #crate-texture; roughness: 1; metalness: 0;" shadow="cast: true; receive: true;"></a-mixin>
+      <a-mixin id="spotlight" light="type: spot; color: red; intensity: 20; distance: 7.5; castShadow: true; penumbra: 0.5;"></a-mixin>
+      <a-mixin id="sign" material="shader: standard;"></a-mixin>
+    </a-assets>
 
-    <a-entity class="crate" mixin="crate" dynamic-body rotation="0 45 90" position="4 0.5 6"></a-entity>
-    <a-entity class="crate" mixin="crate" dynamic-body position="4 0.5 4.8"></a-entity>
+    <!-- Camera 0.8.0 -->
+  <!--   <a-camera look-controls="pointerLockEnabled: true;" position=" 0 1.6 3" sound="src: #ambience; autoplay: true; loop: true; positional: false; volume: 0.2;"></a-camera> -->
 
-    <!-- Garage Door -->
-    <a-entity position="0 0 9.99">
+    <!-- Camera 0.7.1 -->
+    <a-entity id="player" camera="userHeight: 1.6;" jump-ability kinematic-body universal-controls position="0 0 0" sound__ambience="src: #ambience; autoplay: true; loop: true; positional: false; volume: 0.2;">
+    </a-entity>
 
-      <!-- Door Frame -->
-      <a-box color="#333" width="10.2" height="0.2" depth="0.05" position="0 5.05 -0.05"></a-box>
-      <a-box color="#333" width="5" height="0.2" depth="0.05" position="5 2.5 -0.05" rotation="0 0 90"></a-box>
-      <a-box color="#333" width="5" height="0.2" depth="0.05" position="-5 2.5 -0.05" rotation="0 0 90"></a-box>
+    <a-entity id="room" shockwave jitter="on: shockwave; off: shockwave-off; autoplay: false; intensity: 0.1;" sound__shockwave="src: #shockwave; autoplay: false; loop: false; positional: false; on: shockwave;" sound__cluster="src: #cluster; on: cluster; autoplay: false; loop: false; positional: false; volume: 0.5;" sound__bombXXX="src: #bomb; autoplay: false; loop: false; positional: false; on: bomb; volume: 0.4;">
 
-      <!-- Door -->
-      <a-image src="#garage-door" material="shader: standard; normalMap: #garagedoor-normal;" position="0 2.5 0" height="5" width="10" shadow="cast: true; receive: false;"></a-image>    
+      <!-- Siren and detonation -->
+      <a-entity sound__bomb="src: #bomb; autoplay: false; loop: false; positional: true; on: bomb; volume: 5; rolloffFactor: 0.2" position="0 4 10"></a-entity>
 
-    </a-entity><!-- /Garage Door -->
+      <!-- Dynamic Crates -->
+      <a-entity mixin="crate" dynamic-body position="0 2.5 -9.5"></a-entity>
 
+      <a-entity class="crate" mixin="crate" dynamic-body position="-0.75 1.5 -9.5"></a-entity>
+      <a-entity class="crate" mixin="crate" dynamic-body position="0.75 1.5 -9.5" rotation="0 0 90"></a-entity>
 
-    <!-- Walls -->
-    <a-entity mixin="wall" position="0 5 -10.5"></a-entity>
-    <a-entity mixin="wall" position="0 5 10.5"></a-entity>
-    <a-entity mixin="wall" position="-10.5 5 0" rotation="0 90 0"></a-entity>
-    <a-entity mixin="wall" position="10.5 5 0" rotation="0 90 0"></a-entity>
+      <a-entity class="crate" mixin="crate" dynamic-body position="-1.5 0.5 -9.5"></a-entity>
+      <a-entity class="crate" mixin="crate" dynamic-body position="0 0.5 -9.5" rotation="0 0 90"></a-entity>
+      <a-entity class="crate" mixin="crate" dynamic-body position="1.5 0.5 -9.5"></a-entity>
 
-    <!-- Signs -->
-    <a-image mixin="sign" src="#fallout-shelter" width="1.44" height="2.015" rotation="0 90 0" position="-9.99 3.5 0"></a-image>
-    <a-image mixin="sign" src="#fallout-shelter" width="1.44" height="2.015" rotation="0 -90 0" position="9.99 3.5 0"></a-image>
+      <!-- Dynamic Crates -->
+      <a-entity class="crate" mixin="crate" dynamic-body rotation="0 45 90" position="4 0.5 -6"></a-entity>
+      <a-entity class="crate" mixin="crate" dynamic-body position="4 1.5 -6.1"></a-entity>
 
-    <a-image mixin="sign" src="#radiation" position="-1 5 -9.99"></a-image>
-    <a-image mixin="sign" src="#radiation" position="1 5 -9.99"></a-image>
+      <a-entity class="crate" mixin="crate" dynamic-body rotation="0 45 90" position="-4 0.5 -6"></a-entity>
+      <a-entity class="crate" mixin="crate" dynamic-body position="-4 0.5 -4.8"></a-entity>
+
+       <a-entity class="crate" mixin="crate" dynamic-body rotation="0 45 90" position="-4 0.5 6"></a-entity>
+      <a-entity class="crate" mixin="crate" dynamic-body position="-4 1.5 6.1"></a-entity>
+
+      <a-entity class="crate" mixin="crate" dynamic-body rotation="0 45 90" position="4 0.5 6"></a-entity>
+      <a-entity class="crate" mixin="crate" dynamic-body position="4 0.5 4.8"></a-entity>
+
+      <!-- Garage Door -->
+      <a-entity position="0 0 9.99">
+
+        <!-- Door Frame -->
+        <a-box color="#333" width="10.2" height="0.2" depth="0.05" position="0 5.05 -0.05"></a-box>
+        <a-box color="#333" width="5" height="0.2" depth="0.05" position="5 2.5 -0.05" rotation="0 0 90"></a-box>
+        <a-box color="#333" width="5" height="0.2" depth="0.05" position="-5 2.5 -0.05" rotation="0 0 90"></a-box>
+
+        <!-- Door -->
+        <a-image src="#garage-door" material="shader: standard; normalMap: #garagedoor-normal;" position="0 2.5 0" height="5" width="10" shadow="cast: true; receive: false;"></a-image>    
+
+      </a-entity><!-- /Garage Door -->
 
 
-    <!-- Alarm Light -->
-    <a-entity geometry="primitive: cylinder; radius: 0.2; height: 0.25" material="metalness: 1; roughness: 0.2; color: red; opacity: 0.9; shader: standard; emissive: red; emissiveIntensity: 10; fog: true;" rotation="90 0 0" position="0 5 -9.85" sound="src: #alarm; autoplay: true; loop: true;">
-      <!-- Container for rotation -->
-      <a-entity rotation="90 0 0">
-        <!-- Inner bulb -->
-        <a-entity geometry="primitive: cylinder; radius: 0.1; height: 0.2;" material="color: red; shader: standard; emissive: white; emissiveIntensity: 10; fog: true;" position="0 0 0" animation="property: rotation.z; to: 360; dur: 1500; loop: true; autoplay: true; easing: linear;">
-          <!-- Spotlights -->
-          <a-entity mixin="spotlight" rotation="90 0 0"></a-entity>
-          <a-entity mixin="spotlight" rotation="-90 0 0"></a-entity>
-        </a-entity><!-- /Bulb -->
-      </a-entity><!-- /Container -->
-    </a-entity><!-- /Alarm Light -->
+      <!-- Walls -->
+      <a-entity mixin="wall" position="0 5 -10.5"></a-entity>
+      <a-entity mixin="wall" position="0 5 10.5"></a-entity>
+      <a-entity mixin="wall" position="-10.5 5 0" rotation="0 90 0"></a-entity>
+      <a-entity mixin="wall" position="10.5 5 0" rotation="0 90 0"></a-entity>
+
+      <!-- Signs -->
+      <a-image mixin="sign" src="#fallout-shelter" width="1.44" height="2.015" rotation="0 90 0" position="-9.99 3.5 0"></a-image>
+      <a-image mixin="sign" src="#fallout-shelter" width="1.44" height="2.015" rotation="0 -90 0" position="9.99 3.5 0"></a-image>
+
+      <a-image mixin="sign" src="#radiation" position="-1 5 -9.99"></a-image>
+      <a-image mixin="sign" src="#radiation" position="1 5 -9.99"></a-image>
 
 
-    <a-image mixin="sign" src="#radiation" height="1" width="1" position="-1 6 9.99"></a-image>
-    <a-image mixin="sign" src="#radiation" height="1" width="1" position="1 6 9.99"></a-image>
-    <!-- Alarm Light Back -->
-    <a-entity geometry="primitive: cylinder; radius: 0.2; height: 0.25" material="metalness: 1; roughness: 0.2; color: red; opacity: 0.9; shader: standard; emissive: red; emissiveIntensity: 10; fog: true;" rotation="90 180 0" position="0 6 9.85" sound="src: #alarm; autoplay: true; loop: true;">
-      <!-- Container for rotation -->
-      <a-entity rotation="90 0 0">
-        <!-- Inner bulb -->
-        <a-entity geometry="primitive: cylinder; radius: 0.1; height: 0.2;" material="color: red; shader: standard; emissive: white; emissiveIntensity: 10; fog: true;" position="0 0 0" animation="property: rotation.z; to: 360; dur: 1500; loop: true; autoplay: true; easing: linear;">
-          <!-- Spotlights -->
-          <a-entity mixin="spotlight" rotation="90 0 0"></a-entity>
-          <a-entity mixin="spotlight" rotation="-90 0 0"></a-entity>
-        </a-entity><!-- /Bulb -->
-      </a-entity><!-- /Container -->
-    </a-entity><!-- /Alarm Light -->
+      <!-- Alarm Light -->
+      <a-entity geometry="primitive: cylinder; radius: 0.2; height: 0.25" material="metalness: 1; roughness: 0.2; color: red; opacity: 0.9; shader: standard; emissive: red; emissiveIntensity: 10; fog: true;" rotation="90 0 0" position="0 5 -9.85" sound="src: #alarm; autoplay: true; loop: true;">
+        <!-- Container for rotation -->
+        <a-entity rotation="90 0 0">
+          <!-- Inner bulb -->
+          <a-entity geometry="primitive: cylinder; radius: 0.1; height: 0.2;" material="color: red; shader: standard; emissive: white; emissiveIntensity: 10; fog: true;" position="0 0 0" animation="property: rotation.z; to: 360; dur: 1500; loop: true; autoplay: true; easing: linear;">
+            <!-- Spotlights -->
+            <a-entity mixin="spotlight" rotation="90 0 0"></a-entity>
+            <a-entity mixin="spotlight" rotation="-90 0 0"></a-entity>
+          </a-entity><!-- /Bulb -->
+        </a-entity><!-- /Container -->
+      </a-entity><!-- /Alarm Light -->
 
-    <!-- Ambient Light -->
-    <a-light type="ambient" intensity="0.3" color="#f66"></a-light>
 
-    <!-- Ceiling -->
-    <a-entity mixin="floor" position="0 10.5 0">
+      <a-image mixin="sign" src="#radiation" height="1" width="1" position="-1 6 9.99"></a-image>
+      <a-image mixin="sign" src="#radiation" height="1" width="1" position="1 6 9.99"></a-image>
+      <!-- Alarm Light Back -->
+      <a-entity geometry="primitive: cylinder; radius: 0.2; height: 0.25" material="metalness: 1; roughness: 0.2; color: red; opacity: 0.9; shader: standard; emissive: red; emissiveIntensity: 10; fog: true;" rotation="90 180 0" position="0 6 9.85" sound="src: #alarm; autoplay: true; loop: true;">
+        <!-- Container for rotation -->
+        <a-entity rotation="90 0 0">
+          <!-- Inner bulb -->
+          <a-entity geometry="primitive: cylinder; radius: 0.1; height: 0.2;" material="color: red; shader: standard; emissive: white; emissiveIntensity: 10; fog: true;" position="0 0 0" animation="property: rotation.z; to: 360; dur: 1500; loop: true; autoplay: true; easing: linear;">
+            <!-- Spotlights -->
+            <a-entity mixin="spotlight" rotation="90 0 0"></a-entity>
+            <a-entity mixin="spotlight" rotation="-90 0 0"></a-entity>
+          </a-entity><!-- /Bulb -->
+        </a-entity><!-- /Container -->
+      </a-entity><!-- /Alarm Light -->
 
-      <!-- Ducts -->
-      <a-entity mixin="duct" position="0 -2 0">
-        <a-entity mixin="duct-seam"></a-entity>
-        <a-entity mixin="duct-seam" position="-5 0 0"></a-entity>
-        <a-entity mixin="duct-seam" position="5 0 0"></a-entity>
-      </a-entity>
+      <!-- Ambient Light -->
+      <a-light type="ambient" intensity="0.3" color="#f66"></a-light>
 
-       <a-entity mixin="duct" position="0 -2 8">
-        <a-entity mixin="duct-seam"></a-entity>
-        <a-entity mixin="duct-seam" position="-5 0 0"></a-entity>
-        <a-entity mixin="duct-seam" position="5 0 0"></a-entity>
-      </a-entity>
+      <!-- Ceiling -->
+      <a-entity mixin="floor" position="0 10.5 0">
 
-      <a-entity mixin="duct" position="0 -2 -8">
-        <a-entity mixin="duct-seam"></a-entity>
-        <a-entity mixin="duct-seam" position="-5 0 0"></a-entity>
-        <a-entity mixin="duct-seam" position="5 0 0"></a-entity>
-      </a-entity>
+        <!-- Ducts -->
+        <a-entity mixin="duct" position="0 -2 0">
+          <a-entity mixin="duct-seam"></a-entity>
+          <a-entity mixin="duct-seam" position="-5 0 0"></a-entity>
+          <a-entity mixin="duct-seam" position="5 0 0"></a-entity>
+        </a-entity>
 
-    </a-entity><!-- /Ceiling -->
+         <a-entity mixin="duct" position="0 -2 8">
+          <a-entity mixin="duct-seam"></a-entity>
+          <a-entity mixin="duct-seam" position="-5 0 0"></a-entity>
+          <a-entity mixin="duct-seam" position="5 0 0"></a-entity>
+        </a-entity>
 
-    <!-- Poles -->
-    <a-entity mixin="pole" position="-5 5 -6"></a-entity>
-    <a-entity mixin="pole" position="5 5 -6"></a-entity>
+        <a-entity mixin="duct" position="0 -2 -8">
+          <a-entity mixin="duct-seam"></a-entity>
+          <a-entity mixin="duct-seam" position="-5 0 0"></a-entity>
+          <a-entity mixin="duct-seam" position="5 0 0"></a-entity>
+        </a-entity>
 
-    <a-entity mixin="pole" position="-5 5 6"></a-entity>
-    <a-entity mixin="pole" position="5 5 6"></a-entity>  
+      </a-entity><!-- /Ceiling -->
 
-    <!-- Floor -->
-    <a-entity mixin="floor" position="0 -0.5 0"></a-entity>
-    
-  </a-entity><!-- /room -->
-  
-</a-scene>
+      <!-- Poles -->
+      <a-entity mixin="pole" position="-5 5 -6"></a-entity>
+      <a-entity mixin="pole" position="5 5 -6"></a-entity>
+
+      <a-entity mixin="pole" position="-5 5 6"></a-entity>
+      <a-entity mixin="pole" position="5 5 6"></a-entity>  
+
+      <!-- Floor -->
+      <a-entity mixin="floor" position="0 -0.5 0"></a-entity>
+
+    </a-entity><!-- /room -->
+
+  </a-scene>
     <div id="dialog-container" style="position:absolute; top:0px; left:0px; z-index:1000;width:600">
       <dialog id="dialog_" style="width:600">
         <input id="msg_" placeholder="Enter your message here." style="width:460">

@@ -67,18 +67,12 @@ window.socket.on('msg',data=>{
 window.socket.on('update-crates', cratesData=>{
   if(window.gameHasBegun && window.config.synchronizeCrates)window.updateCrates(cratesData);
 });
-window.socket.on('get-bombtrack-time',()=>{
-  let time = window.bombtrack.components.sound__bomb.listener.context.currentTime;
-  window.socket.emit('bombtrack-time-update',time);
+window.socket.on('get-shockwave-sync',()=>{
+  document.querySelector('#room').components.shockwave.isSyncMaster = true;
 });
-window.socket.on('bombtrack-time-update',time=>{
-  if(typeof window.bombtrack != "undefined"){
-    window.bombtrack.pause();
-    window.bombtrack.components.sound__bomb.listener.context.currentTime = time;
-    window.bombtrack.play();
-  }
+window.socket.on('blow-stuff-up',()=>{
+ document.querySelector('#room').components.shockwave.blowStuffUp();
 });
-
 
 
 // Helper functions
