@@ -10,7 +10,9 @@ Toggle music mute with **M** key. Play next song with **P** key.
 Toggle the **Message and Face UI** with the **EQUALS** key. You must enter the proper **Message_KEY** to send a message. **Tab** your way through the UI elements. Once you have finished typing your message or selecting a new face, hit **ENTER** to submit.
 
 
-Pressing the **F** key or clicking the **VR Headset Icon** will take you to fullscreen mode.  Note: in fullscreen mode only movement keys are enabled.  Press the **ESC** key to exit fullscreen mode. Start by clicking the **Show Live** button at the top of this page.
+Pressing the **F** key or clicking the **VR Headset Icon** will take you to fullscreen mode.  Note: in fullscreen mode only movement keys are enabled.  Press the **ESC** key to exit fullscreen mode. 
+
+<a href="https://bomb-shelter-buddies.glitch.me/" no-opener no-referer>**LIVE DEMO**</a>
 
 **Remixing Instructions**
 
