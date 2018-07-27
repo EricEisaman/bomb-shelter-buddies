@@ -2,7 +2,7 @@ module.exports = (io)=>{
     var players = {};
     var synchronizedCrates = true;
     var lastSocketSentCrates = {broadcast:{emit:()=>{}}};
-    var socketsNeedingBombtrackTime = [];
+    var socketsNeedingShockwaveSync = [];
     var crates = [];
     let intervalId = setInterval(()=>{
           io.emit('update-players',players);
@@ -18,8 +18,10 @@ module.exports = (io)=>{
           console.log(players);
           socket.emit('players-already-here',players);
           if(Object.keys(players).length > 0){
-            lastSocketSentCrates.emit('get-bombtrack-time');
-            socketsNeedingBombtrackTime.push(socket);
+            lastSocketSentCrates.emit('get-shockwave-sync');
+            socketsNeedingShockwaveSync.push(socket);
+          }else{
+            socket.emit('blow-stuff-up');
           }
           console.log("New player has state:",shared_state_data);
           // Add the new player to the object
@@ -56,11 +58,11 @@ module.exports = (io)=>{
           socket.ipLocal = data;
           console.log(`Client Info:\nPublic IP: ${socket.ip}  Local IP: ${socket.ipLocal}`);
         });
-        socket.on('bombtrack-time-update',function(time){
-          console.log('bombtrack time update received');
-          let arr = socketsNeedingBombtrackTime;
+        socket.on('set-shockwave-sync',function(){
+          console.log('shockwave sync received');
+          let arr = socketsNeedingShockwaveSync;
           for (let i = arr.length - 1; i >= 0; i -= 1) {
-            arr[i].emit('bombtrack-time-update',time);
+            arr[i].emit('blow-stuff-up');
             arr.splice(i, 1);
           }
         });
